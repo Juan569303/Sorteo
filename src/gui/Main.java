@@ -4,7 +4,9 @@
  */
 package gui;
 
+import java.util.Iterator;
 import java.util.Random;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -12,8 +14,11 @@ import javax.swing.table.DefaultTableModel;
  * @author juan
  */
 public class Main extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
+    int contador = 1, maximo, minimo;
+    String mes;
+    Random random = new Random();
 
     /**
      * Creates new form Main
@@ -127,18 +132,16 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(btnSortear)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(btnLimpiar)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
 
         jLabel6.setFont(new java.awt.Font("sansserif", 1, 18)); // NOI18N
         jLabel6.setText("Ganadores");
 
+        tblGanadores.setFont(new java.awt.Font("sansserif", 0, 14)); // NOI18N
         tblGanadores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "Posición", "Número"
@@ -172,8 +175,8 @@ public class Main extends javax.swing.JFrame {
                 .addGap(11, 11, 11)
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(138, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jLabel1.setFont(new java.awt.Font("sansserif", 1, 40)); // NOI18N
@@ -232,44 +235,131 @@ public class Main extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSortearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSortearActionPerformed
-        
-        String mes;
-        String max;
-        //Rango de valores
-        mes = (String)cmbMes.getSelectedItem();
-        String min = "01"+mes+"0001";
-        
-        if (mes.equals("02")) {
-            max = "28"+mes+"9999";
-        }else{
-            if (mes.equals("02")||mes.equals("02")
-                    ||mes.equals("02")||mes.equals("02")) {
-                max = "30"+mes+"9999";
-            }else{
-                max = "30"+mes+"9999";
+
+        if (!txtCantidadGanadores.getText().isEmpty()) {
+
+            int numeroGanadores = Integer.parseInt(txtCantidadGanadores.getText());
+
+            if (contador <= numeroGanadores) {
+
+                String max;
+                //Rango de valores
+                mes = (String) cmbMes.getSelectedItem();
+                String min = "01";
+
+                if (mes.equals("02")) {
+                    max = "28";
+                } else {
+                    if (mes.equals("11") || mes.equals("06")
+                            || mes.equals("04") || mes.equals("09")) {
+                        max = "30";
+                    } else {
+                        max = "31";
+                    }
+                }
+                //sortear aleatoriamente
+                maximo = Integer.parseInt(max);
+                minimo = Integer.parseInt(min);
+
+                String numeroSorteado = sortearNumero();
+                //Verificar que no se repita
+                boolean esRepetido = buscarRepetido(numeroSorteado);
+                if (esRepetido == false) {
+                    AgregarNumero(contador, numeroSorteado);
+                    contador++;
+
+                } else {
+                    while (esRepetido == true) {
+                        numeroSorteado = sortearNumero();
+                        esRepetido = buscarRepetido(numeroSorteado);
+                    }
+                    AgregarNumero(contador, numeroSorteado);
+                    contador++;
+
+                }
+                //
+            } else {
+                JOptionPane.showMessageDialog(rootPane, "Ya se alcanzo la cantidad de ganadores");
+
+            }
+        } else {
+            JOptionPane.showMessageDialog(rootPane, "Es necesario poner la cantidad de ganadores");
+        }
+    }//GEN-LAST:event_btnSortearActionPerformed
+    public String agregarCeros(int randomDia, String mes, int randomTicket) {
+
+        int largoString = (Integer.toString(randomDia)).length();
+
+        String numeroSorteado;
+
+        //Verificar que el dia tenga dos digitos
+        if (largoString == 2) {
+            numeroSorteado = randomDia + mes;
+        } else {
+            numeroSorteado = "0" + randomDia + mes;
+        }
+
+        //Verificar que el ticket tenga 4 digitos
+        largoString = (Integer.toString(randomTicket)).length();
+
+        if (largoString == 3) {
+            numeroSorteado = numeroSorteado + "0" + randomTicket;
+        } else {
+            if (largoString == 2) {
+                numeroSorteado = numeroSorteado + "00" + randomTicket;
+            } else {
+                if (largoString == 1) {
+                    numeroSorteado = numeroSorteado + "000" + randomTicket;
+                } else {
+                    numeroSorteado = numeroSorteado + randomTicket;
+                }
             }
         }
-        //sortear aleatoriamente
-        Random random = new Random();
-        int maximo = Integer.parseInt(max);
-        int minimo = Integer.parseInt(min);
-        
-        int numeroSorteado = random.nextInt(maximo-minimo+1)+minimo;
-        //Verificar que no se repita
-        DefaultTableModel model = (DefaultTableModel)tblGanadores.getModel();
-        
-        Object[] objeto ={1,numeroSorteado};
+
+        return numeroSorteado;
+    }
+
+private boolean buscarRepetido(String numeroSorteado) {
+    DefaultTableModel model = (DefaultTableModel) tblGanadores.getModel();
+    for (int i = 0; i < model.getRowCount(); i++) {
+        if (numeroSorteado.equals(model.getValueAt(i, 1))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+    private String sortearNumero() {
+        int randomDia = random.nextInt(maximo - minimo) + 1;
+        int randomTicket = random.nextInt(9999 - 0001 + 1);
+
+        String numeroSorteado = agregarCeros(randomDia, mes, randomTicket);
+
+        return numeroSorteado;
+    }
+
+    private void AgregarNumero(int contador, String numeroSorteado) {
+        DefaultTableModel model = (DefaultTableModel) tblGanadores.getModel();
+        Object[] objeto = {contador, numeroSorteado};
         model.addRow(objeto);
-    }//GEN-LAST:event_btnSortearActionPerformed
+    }
 
     private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
-        // TODO add your handling code here:
+        if (JOptionPane.showConfirmDialog(rootPane, "¿Desea cerrar el sorteo?", "Finalización de sorteo ",
+                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+            txtCantidadGanadores.setText("");
+            cmbMes.setSelectedIndex(0);
+            DefaultTableModel model = (DefaultTableModel) tblGanadores.getModel();
+            model.setRowCount(0);
+            contador = 0;
+        } else {
+        }
     }//GEN-LAST:event_btnLimpiarActionPerformed
 
     /**
      * @param args the command line arguments
      */
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnLimpiar;
